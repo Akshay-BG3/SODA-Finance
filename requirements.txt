@@ -6,3 +6,4 @@ seaborn
 python-dotenv
 scikit-learn
 plotly
+yfinance
