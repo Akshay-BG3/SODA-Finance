@@ -3,4 +3,6 @@ matplotlib
 pandas
 numpy
 seaborn
-dotenv
+python-dotenv
+scikit-learn
+plotly
