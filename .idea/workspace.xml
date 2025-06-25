@@ -4,13 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5c36d44a-f7eb-4e7e-be0c-9085dedba060" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/Project SODA-Finance.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="5c36d44a-f7eb-4e7e-be0c-9085dedba060" name="Changes" comment="Initial commit of SODA-Finance project">
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/statement_analyzer/charts.py" beforeDir="false" afterPath="$PROJECT_DIR$/statement_analyzer/charts.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,29 +34,30 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.app.executor": "Run",
-    "Python.background_image.executor": "Run",
-    "Python.main.executor": "Run",
-    "Python.pdf_report.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "C:/Users/USER/PycharmProjects/Project SODA-Finance",
-    "settings.editor.selected.configurable": "com.intellij.pycharm.community.ide.impl.configuration.PythonContentEntriesConfigurable"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.ai_summary.executor&quot;: &quot;Run&quot;,
+    &quot;Python.app.executor&quot;: &quot;Run&quot;,
+    &quot;Python.background_image.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.pdf_report.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/USER/PycharmProjects/Project SODA-Finance&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.intellij.pycharm.community.ide.impl.configuration.PythonContentEntriesConfigurable&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\USER\PycharmProjects\Project SODA-Finance" />
       <recent name="C:\Users\USER\PycharmProjects\Project SODA-Finance\agent" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\USER\PycharmProjects\Project SODA-Finance\api\routes" />
+      <recent name="C:\Users\USER\PycharmProjects\Project SODA-Finance\api" />
       <recent name="C:\Users\USER\PycharmProjects\Project SODA-Finance\app" />
       <recent name="C:\Users\USER\PycharmProjects\Project SODA-Finance" />
       <recent name="C:\Users\USER\PycharmProjects\Project SODA-Finance\test_fastapi" />
-      <recent name="C:\Users\USER\PycharmProjects\Project SODA-Finance\portfolio" />
-      <recent name="C:\Users\USER\PycharmProjects\Project SODA-Finance\risk_detection" />
     </key>
   </component>
   <component name="SharedIndexes">
@@ -77,6 +76,43 @@
       <option name="presentableId" value="Default" />
       <updated>1750224810732</updated>
     </task>
+    <task id="LOCAL-00001" summary="Initial commit of SODA-Finance project">
+      <option name="closed" value="true" />
+      <created>1750656091587</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1750656091588</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Initial commit of SODA-Finance project">
+      <option name="closed" value="true" />
+      <created>1750656227740</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1750656227740</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Initial commit of SODA-Finance project">
+      <option name="closed" value="true" />
+      <created>1750699734392</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1750699734393</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Initial commit of SODA-Finance project">
+      <option name="closed" value="true" />
+      <created>1750699763362</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1750699763362</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Initial commit of SODA-Finance project" />
+    <option name="LAST_COMMIT_MESSAGE" value="Initial commit of SODA-Finance project" />
   </component>
 </project>

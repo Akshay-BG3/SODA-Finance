@@ -2,12 +2,13 @@ import streamlit as st
 import pandas as pd
 import base64
 import re
+import requests
 from datetime import datetime
 
 from statement_analyzer.file_handler import load_csv, clean_dataframe
 from statement_analyzer.classifier import classify_transactions, calculate_monthly_totals
 from statement_analyzer.analyzer import get_top_expense_categories, get_monthly_category_trends
-from statement_analyzer.charts import plot_expense_pie_chart, plot_monthly_bar_chart
+from statement_analyzer.charts import plot_expense_pie_chart, plot_monthly_bar_chart, plot_cumulative_balance, plot_daily_expense_heatmap
 from statement_analyzer.insights import generate_summary, extract_metrics_for_ai
 from ai_summary.groq_summary import generate_groq_summary
 from risk_detection.alerts import detect_risks, detect_spending_spikes
@@ -19,6 +20,51 @@ from agent.agent_core import generate_agent_brief, generate_agent_full_plan_prom
 from agent.agent_memory import save_metrics_to_memory, load_previous_metrics, compare_metrics
 from agent.pdf_report import generate_pdf
 
+st.set_page_config(page_title="SODA-Finance", layout="wide")
+
+# Function to set background image
+# def set_bg(image_file):
+#     with open(image_file, "rb") as f:
+#         encoded_img = base64.b64encode(f.read()).decode()
+#
+#     st.markdown(f"""
+#         <style>
+#         body {{
+#             background-image: url("data:image/png;base64,{encoded_img}");
+#             background-size: cover;
+#             background-position: center;
+#             background-repeat: no-repeat;
+#         }}
+#         .stApp::before {{
+#             content: "";
+#             position: fixed;
+#             top: 0;
+#             left: 0;
+#             width: 100%;
+#             height: 100%;
+#             background-color: rgba(255, 255, 255, 0.6);
+#             z-index: -1;
+#         }}
+#         </style>
+#     """, unsafe_allow_html=True)
+#
+#     set_bg(r"C:\Users\USER\PycharmProjects\Project DARA\background.jpg.jpg")
+#
+#     st.markdown("""
+#         <style>
+#         .stMarkdown, .stDataFrame, .stImage, .stSubheader, .stText, .stPlotlyChart, .stPyplotChart {
+#             background-color: rgba(255, 255, 255, 0.85);
+#             padding: 1rem;
+#             border-radius: 1rem;
+#             margin-bottom: 1rem;
+#             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.05);
+#         }
+#         </style>
+#     """, unsafe_allow_html=True)
+
+
+
+
 def remove_emojis(text):
     emoji_pattern = re.compile("["
                                u"\U0001F600-\U0001F64F"
@@ -28,7 +74,7 @@ def remove_emojis(text):
                                "]+", flags=re.UNICODE)
     return emoji_pattern.sub(r'', text)
 
-st.set_page_config(page_title="SODA-Finance", layout="wide")
+# st.set_page_config(page_title="SODA-Finance", layout="wide")
 
 
 st.markdown(
@@ -58,7 +104,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
 
 
 
