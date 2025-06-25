@@ -150,15 +150,35 @@ if uploaded_file is not None:
         trend_data = get_monthly_category_trends(df)
         st.dataframe(trend_data, use_container_width=True)
 
+        # st.markdown("---")
+        # st.subheader("📈 Expense Distribution (Pie Chart)")
+        # pie_chart = plot_expense_pie_chart(df)
+        # st.pyplot(pie_chart)
+        #
+        # st.markdown("---")
+        # st.subheader("📈 Monthly Income vs Expense (Bar Chart)")
+        # bar_chart = plot_monthly_bar_chart(df)
+        # st.pyplot(bar_chart)
+
         st.markdown("---")
         st.subheader("📈 Expense Distribution (Pie Chart)")
         pie_chart = plot_expense_pie_chart(df)
         st.pyplot(pie_chart)
 
         st.markdown("---")
-        st.subheader("📈 Monthly Income vs Expense (Bar Chart)")
+        st.subheader("📊 Monthly Income vs Expense (Bar Chart)")
         bar_chart = plot_monthly_bar_chart(df)
         st.pyplot(bar_chart)
+
+        st.markdown("---")
+        st.subheader("📉 Cumulative Balance Over Time")
+        cumulative_chart = plot_cumulative_balance(df)
+        st.pyplot(cumulative_chart)
+
+        st.markdown("---")
+        st.subheader("🌡️ Daily Expense Heatmap")
+        heatmap = plot_daily_expense_heatmap(df)
+        st.pyplot(heatmap)
 
         st.markdown("---")
         st.subheader("🧐 Summary Insights")
