@@ -1,6 +1,10 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+import plotly.graph_objects as go
+import plotly.express as px
+
+
 
 # def plot_expense_pie_chart(df):
 #     expense_df = df[df['type'] == 'expense']
@@ -22,90 +26,156 @@ def plot_expense_pie_chart(df):
     expense_df = df[df['type'] == 'expense']
     category_sum = expense_df.groupby('category')['amount'].sum().abs()
 
-    fig, ax = plt.subplots(figsize=(4, 4))
-    wedges, texts, autotexts = ax.pie(
-        category_sum,
+    fig = go.Figure(data=[go.Pie(
         labels=category_sum.index,
-        autopct='%1.1f%%',
-        startangle=90,
-        wedgeprops=dict(width=0.4),
-        textprops=dict(color="black", fontsize=8)
+        values=category_sum.values,
+        hole=0,  # No donut
+        textinfo='label+percent',
+        textfont=dict(size=12),
+        insidetextorientation='radial',
+        marker=dict(
+            colors=['#EF553B', '#00CC96', '#636EFA', '#AB63FA', '#FFA15A'],
+            line=dict(color='white', width=2)
+        ),
+        hovertemplate='%{label}: ₹%{value:,.0f}<extra></extra>'
+    )])
+
+    fig.update_layout(
+        title=dict(text='📌 Expenses by Category', x=0.2),
+        height=400,
+        margin=dict(t=60, b=40, l=20, r=20),
+        showlegend=False,
+        template='plotly_white'
     )
-    ax.axis('equal')
-    plt.title('Expenses by Category', fontsize=10, fontweight='bold')
     return fig
 
-
-# def plot_monthly_bar_chart(df):
-#     df['date'] = pd.to_datetime(df['date'])
-#     df['month'] = df['date'].dt.to_period('M').astype(str)
-#     summary = df.groupby(['month', 'type'])['amount'].sum().unstack(fill_value=0)
-#
-#     fig, ax = plt.subplots(figsize=(5.5, 3))  # Smaller chart
-#     summary.plot(kind='bar', ax=ax, width=0.5, color=['green', 'red'])
-#
-#     plt.title('Monthly Income vs Expense', fontsize=9)
-#     plt.xlabel('Month', fontsize=8)
-#     plt.ylabel('Amount', fontsize=8)
-#     plt.xticks(rotation=30, fontsize=7)
-#     plt.yticks(fontsize=7)
-#     plt.tight_layout()
-#     return fig
 
 def plot_monthly_bar_chart(df):
     df['date'] = pd.to_datetime(df['date'])
     df['month'] = df['date'].dt.to_period('M').astype(str)
-    summary = df.groupby(['month', 'type'])['amount'].sum().unstack(fill_value=0)
+    summary = df.groupby(['month', 'type'])['amount'].sum().unstack(fill_value=0).reset_index()
 
-    fig, ax = plt.subplots(figsize=(6, 3.5))
-    colors = {'income': '#4CAF50', 'expense': '#F44336'}
-    bars = summary.plot(kind='bar', ax=ax, width=0.6, color=[colors.get(x) for x in summary.columns])
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=summary['month'], y=summary['income'],
+        name='Income', marker_color='#00B686',
+        hovertemplate='Income: ₹%{y:,.0f}<extra></extra>'
+    ))
+    fig.add_trace(go.Bar(
+        x=summary['month'], y=summary['expense'],
+        name='Expense', marker_color='#F45B69',
+        hovertemplate='Expense: ₹%{y:,.0f}<extra></extra>'
+    ))
 
-    plt.title('Monthly Income vs Expense', fontsize=11, fontweight='bold')
-    plt.xlabel('Month', fontsize=9)
-    plt.ylabel('Amount', fontsize=9)
-    plt.xticks(rotation=30, fontsize=8)
-    plt.yticks(fontsize=8)
-    plt.grid(axis='y', linestyle='--', linewidth=0.5)
+    fig.update_layout(
+        title=dict(text='📊 Monthly Income vs Expense', x=0.2),
+        barmode='group',
+        height=400,
+        xaxis=dict(title='Month'),
+        yaxis=dict(title='Amount (₹)'),
+        template='plotly_white',
+        legend=dict(orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1),
+        margin=dict(t=60, b=40, l=40, r=20)
+    )
 
-    # Annotate bars
-    for p in ax.patches:
-        height = p.get_height()
-        if height > 0:
-            ax.annotate(f'{int(height)}', (p.get_x() + p.get_width() / 2., height),
-                        ha='center', va='bottom', fontsize=7, color='black', xytext=(0, 2), textcoords='offset points')
-
-    plt.tight_layout()
     return fig
 
+
 def plot_cumulative_balance(df):
+    df = df.copy()
     df['date'] = pd.to_datetime(df['date'])
     df = df.sort_values('date')
     df['signed_amount'] = df.apply(lambda x: x['amount'] if x['type'] == 'income' else -x['amount'], axis=1)
     df['cumulative_balance'] = df['signed_amount'].cumsum()
 
-    fig, ax = plt.subplots(figsize=(6, 3))
-    ax.plot(df['date'], df['cumulative_balance'], color='#2196F3', linewidth=2)
-    ax.set_title("Cumulative Balance Over Time", fontsize=10, fontweight='bold')
-    ax.set_xlabel("Date", fontsize=8)
-    ax.set_ylabel("Balance", fontsize=8)
-    ax.grid(True, linestyle='--', alpha=0.5)
-    plt.xticks(fontsize=7)
-    plt.yticks(fontsize=7)
-    plt.tight_layout()
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=df['date'],
+        y=df['cumulative_balance'],
+        mode='lines+markers',
+        line=dict(color='#0077B6', width=2),
+        marker=dict(size=4, color='#90E0EF'),
+        hovertemplate='Date: %{x|%b %d, %Y}<br>Balance: ₹%{y:,.0f}<extra></extra>'
+    ))
+
+    fig.update_layout(
+        title=dict(text='📈 Cumulative Balance Over Time', x=0.2),
+        xaxis=dict(title='Date'),
+        yaxis=dict(title='Balance (₹)'),
+        template='plotly_white',
+        height=400,
+        margin=dict(t=60, b=40, l=40, r=20),
+        showlegend=False
+    )
+
     return fig
+
+
 
 def plot_daily_expense_heatmap(df):
+    df = df.copy()
     df['date'] = pd.to_datetime(df['date'])
     df['day'] = df['date'].dt.day
-    df['month'] = df['date'].dt.strftime('%b %Y')
+    df['month_year'] = df['date'].dt.strftime('%b %Y')
 
-    pivot = df[df['type'] == 'expense'].pivot_table(index='day', columns='month', values='amount', aggfunc='sum', fill_value=0)
+    heatmap_data = df[df['type'] == 'expense'].pivot_table(
+        index='day',
+        columns='month_year',
+        values='amount',
+        aggfunc='sum',
+        fill_value=0
+    )
 
-    fig, ax = plt.subplots(figsize=(6, 4))
-    sns.heatmap(pivot, cmap="Reds", linewidths=0.2, linecolor='gray', ax=ax, cbar_kws={'label': 'Expense Amount'})
-    ax.set_title('Daily Expense Heatmap', fontsize=10, fontweight='bold')
-    plt.yticks(rotation=0)
-    plt.tight_layout()
+    fig = go.Figure(data=go.Heatmap(
+        z=heatmap_data.values,
+        x=heatmap_data.columns,
+        y=heatmap_data.index,
+        colorscale='Reds',
+        colorbar=dict(title='₹ Spent'),
+        hovertemplate='Month: %{x}<br>Day: %{y}<br>₹%{z:,.0f}<extra></extra>'
+    ))
+
+    fig.update_layout(
+        title=dict(text='🌡️ Daily Expense Heatmap', x=0.2),
+        xaxis=dict(side='top'),
+        yaxis=dict(title='Day of Month'),
+        height=450,
+        margin=dict(t=60, b=40, l=40, r=20),
+        template='plotly_white'
+    )
+
     return fig
+
+
+def plot_cash_flow_funnel(df):
+    df = df.copy()
+    df['signed_amount'] = df.apply(lambda x: x['amount'] if x['type'] == 'income' else -x['amount'], axis=1)
+
+    total_income = df[df['type'] == 'income']['amount'].sum()
+    fixed_expenses = df[df['category'].str.contains('rent|loan|emi|subscription', case=False, na=False)]['amount'].sum()
+    variable_expenses = df[df['category'].str.contains('food|travel|shopping|other', case=False, na=False)]['amount'].sum()
+    discretionary = total_income - fixed_expenses - variable_expenses
+    savings = discretionary if discretionary > 0 else 0
+
+    stages = ['Total Income', 'Fixed Expenses', 'Variable Expenses', 'Discretionary Balance', 'Savings']
+    values = [total_income, total_income - fixed_expenses, total_income - fixed_expenses - variable_expenses, discretionary, savings]
+
+    fig = go.Figure(go.Funnel(
+        y=stages,
+        x=values,
+        textinfo="value+percent previous+percent initial",
+        marker=dict(color=['#2ECC71', '#F39C12', '#E74C3C', '#3498DB', '#9B59B6'])
+    ))
+
+    fig.update_layout(
+        title=dict(text='🔁 Monthly Cash Flow Funnel', x=0.3),
+        height=450,
+        margin=dict(t=60, b=40, l=40, r=40),
+        template='plotly_white'
+    )
+
+    return fig
+
+
 

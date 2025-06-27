@@ -8,7 +8,7 @@ from datetime import datetime
 from statement_analyzer.file_handler import load_csv, clean_dataframe
 from statement_analyzer.classifier import classify_transactions, calculate_monthly_totals
 from statement_analyzer.analyzer import get_top_expense_categories, get_monthly_category_trends
-from statement_analyzer.charts import plot_expense_pie_chart, plot_monthly_bar_chart, plot_cumulative_balance, plot_daily_expense_heatmap
+from statement_analyzer.charts import plot_expense_pie_chart, plot_monthly_bar_chart, plot_cumulative_balance, plot_daily_expense_heatmap, plot_cash_flow_funnel
 from statement_analyzer.insights import generate_summary, extract_metrics_for_ai
 from ai_summary.groq_summary import generate_groq_summary
 from risk_detection.alerts import detect_risks, detect_spending_spikes
@@ -22,47 +22,6 @@ from agent.pdf_report import generate_pdf
 
 st.set_page_config(page_title="SODA-Finance", layout="wide")
 
-# Function to set background image
-# def set_bg(image_file):
-#     with open(image_file, "rb") as f:
-#         encoded_img = base64.b64encode(f.read()).decode()
-#
-#     st.markdown(f"""
-#         <style>
-#         body {{
-#             background-image: url("data:image/png;base64,{encoded_img}");
-#             background-size: cover;
-#             background-position: center;
-#             background-repeat: no-repeat;
-#         }}
-#         .stApp::before {{
-#             content: "";
-#             position: fixed;
-#             top: 0;
-#             left: 0;
-#             width: 100%;
-#             height: 100%;
-#             background-color: rgba(255, 255, 255, 0.6);
-#             z-index: -1;
-#         }}
-#         </style>
-#     """, unsafe_allow_html=True)
-#
-#     set_bg(r"C:\Users\USER\PycharmProjects\Project DARA\background.jpg.jpg")
-#
-#     st.markdown("""
-#         <style>
-#         .stMarkdown, .stDataFrame, .stImage, .stSubheader, .stText, .stPlotlyChart, .stPyplotChart {
-#             background-color: rgba(255, 255, 255, 0.85);
-#             padding: 1rem;
-#             border-radius: 1rem;
-#             margin-bottom: 1rem;
-#             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.05);
-#         }
-#         </style>
-#     """, unsafe_allow_html=True)
-
-
 
 
 def remove_emojis(text):
@@ -74,7 +33,7 @@ def remove_emojis(text):
                                "]+", flags=re.UNICODE)
     return emoji_pattern.sub(r'', text)
 
-# st.set_page_config(page_title="SODA-Finance", layout="wide")
+
 
 
 st.markdown(
@@ -121,7 +80,6 @@ st.markdown(f"**🕒 Report Generated On:** {datetime.now().strftime('%Y-%m-%d %
 st.markdown("---")
 
 
-
 uploaded_file = st.file_uploader("Upload your transaction CSV", type=["csv"])
 
 if uploaded_file is not None:
@@ -129,6 +87,27 @@ if uploaded_file is not None:
     if isinstance(df, pd.DataFrame):
         df = clean_dataframe(df)
         df = classify_transactions(df)
+        df['date'] = pd.to_datetime(df['date'])
+
+        # ───────────────────────────
+        # 🧭 Sidebar Filters
+        # ───────────────────────────
+        st.sidebar.header("🔧 Dashboard Filters")
+
+        min_date = df['date'].min()
+        max_date = df['date'].max()
+
+        date_range = st.sidebar.date_input("Select Date Range", [min_date, max_date])
+
+        categories = sorted(df['category'].dropna().unique())
+        selected_categories = st.sidebar.multiselect("Select Categories", categories, default=categories)
+
+        # Filtered data to be used across app
+        filtered_df = df[
+            (df['date'] >= pd.to_datetime(date_range[0])) &
+            (df['date'] <= pd.to_datetime(date_range[1])) &
+            (df['category'].isin(selected_categories))
+            ]
 
         st.success("✅ File loaded, cleaned, and classified!")
         st.markdown("---")
@@ -150,35 +129,90 @@ if uploaded_file is not None:
         trend_data = get_monthly_category_trends(df)
         st.dataframe(trend_data, use_container_width=True)
 
-        # st.markdown("---")
-        # st.subheader("📈 Expense Distribution (Pie Chart)")
-        # pie_chart = plot_expense_pie_chart(df)
-        # st.pyplot(pie_chart)
-        #
-        # st.markdown("---")
-        # st.subheader("📈 Monthly Income vs Expense (Bar Chart)")
-        # bar_chart = plot_monthly_bar_chart(df)
-        # st.pyplot(bar_chart)
+        #Graphs_vishualization
+    #     st.subheader("📊 Customize Your Dashboard View")
+    #     selected_charts = st.multiselect(
+    #         "Which visualizations would you like to see?",
+    #         ["Expense Distribution", "Monthly Summary", "Cumulative Balance", "Daily Heatmap", "Cash Flow Funnel"],
+    #         default=["Expense Distribution", "Monthly Summary"]
+    #     )
+    #     st.markdown("---")
+    #
+    # if  "Expense Distribution" in selected_charts:
+    #     st.subheader("📈 Expense Distribution (Pie Chart)")
+    #     pie_chart = plot_expense_pie_chart(df)
+    #     st.plotly_chart(pie_chart,  use_container_width=True)
+    #
+    # if "Monthly Summary" in selected_charts:
+    #     st.subheader("📊 Monthly Income vs Expense (Bar Chart)")
+    #     bar_chart = plot_monthly_bar_chart(df)
+    #     st.plotly_chart(bar_chart, use_container_width=True)
+    #
+    # if "Cumulative Balance" in selected_charts:
+    #     st.subheader("📉 Cumulative Balance Over Time")
+    #     cumulative_chart = plot_cumulative_balance(df)
+    #     st.plotly_chart(cumulative_chart, use_container_width=True)
+    #
+    # if "Daily Heatmap" in selected_charts:
+    #     st.subheader("🌡️ Daily Expense Heatmap")
+    #     heatmap = plot_daily_expense_heatmap(df)
+    #     st.plotly_chart(heatmap, use_container_width=True)
+    #
+    # if "Cash Flow Funnel" in selected_charts:
+    #     st.subheader("🔁 Cash Flow Funnel")
+    #     cashflow_tunnel = plot_cash_flow_funnel(df)
+    #     st.plotly_chart(cashflow_tunnel, use_container_width=True)
 
-        st.markdown("---")
-        st.subheader("📈 Expense Distribution (Pie Chart)")
-        pie_chart = plot_expense_pie_chart(df)
-        st.pyplot(pie_chart)
 
-        st.markdown("---")
-        st.subheader("📊 Monthly Income vs Expense (Bar Chart)")
-        bar_chart = plot_monthly_bar_chart(df)
-        st.pyplot(bar_chart)
+        # ───────────────────────────
+        # 📌 Key Financial Highlights
+        # ───────────────────────────
+        st.markdown("### 💼 Key Highlights", unsafe_allow_html=True)
+        total_income = filtered_df[filtered_df['type'] == 'income']['amount'].sum()
+        total_expense = filtered_df[filtered_df['type'] == 'expense']['amount'].sum()
+        savings = total_income - total_expense
+        savings_rate = (savings / total_income) * 100 if total_income > 0 else 0
 
-        st.markdown("---")
-        st.subheader("📉 Cumulative Balance Over Time")
-        cumulative_chart = plot_cumulative_balance(df)
-        st.pyplot(cumulative_chart)
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric(label="📥 Total Income", value=f"₹{total_income:,.0f}")
+        with col2:
+            st.metric(label="💸 Total Expense", value=f"₹{total_expense:,.0f}")
+        with col3:
+            st.metric(label="💰 Savings Rate", value=f"{savings_rate:.1f}%")
 
-        st.markdown("---")
-        st.subheader("🌡️ Daily Expense Heatmap")
-        heatmap = plot_daily_expense_heatmap(df)
-        st.pyplot(heatmap)
+        # ───────────────────────────
+        # 📊 Visualization Tabs
+        # ───────────────────────────
+
+        st.markdown("## 📊 Visual Analysis", unsafe_allow_html=True)
+        tabs = st.tabs(["📊 Trends", "📈 Distribution", "🔁 Flow"])
+
+        # 📊 Trends Tab
+        with tabs[0]:
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("#### 📊 Monthly Income vs Expense", unsafe_allow_html=True)
+                st.plotly_chart(plot_monthly_bar_chart(filtered_df), use_container_width=True)
+            with col2:
+                st.markdown("#### 📉 Cumulative Balance Over Time", unsafe_allow_html=True)
+                st.plotly_chart(plot_cumulative_balance(filtered_df), use_container_width=True)
+
+        # 📈 Distribution Tab
+        with tabs[1]:
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("#### 🥧 Expense Distribution", unsafe_allow_html=True)
+                st.plotly_chart(plot_expense_pie_chart(filtered_df), use_container_width=True)
+            with col2:
+                st.markdown("#### 🌡️ Daily Expense Heatmap", unsafe_allow_html=True)
+                st.plotly_chart(plot_daily_expense_heatmap(filtered_df), use_container_width=True)
+
+        # 🔁 Flow Tab
+        with tabs[2]:
+            st.markdown("#### 🔁 Cash Flow Funnel", unsafe_allow_html=True)
+            st.plotly_chart(plot_cash_flow_funnel(filtered_df), use_container_width=True)
+
 
         st.markdown("---")
         st.subheader("🧐 Summary Insights")
@@ -193,6 +227,77 @@ if uploaded_file is not None:
             st.text(ai_summary)
         except Exception as e:
             st.warning("⚠️ AI summary not available.\n" + str(e))
+
+#         # ───────────────────────────
+#         # 🤖 AI Finance Copilot Panel
+#         # ───────────────────────────
+#         metrics = extract_metrics_for_ai(filtered_df)
+#         risks = detect_risks(filtered_df)
+#         with st.expander("🤖 Open AI Finance Copilot", expanded=False):
+#             user_query = st.text_input("Ask SODA anything about your finances:")
+#             if user_query:
+#                 try:
+#                     ai_prompt = f"""
+# You are SODA Copilot—an intelligent finance assistant.
+#
+# User financial overview:
+# - Income this month: ₹{metrics['total_income']}
+# - Expenses this month: ₹{metrics['total_expense']}
+# - Top risk: {risks[0] if risks else "None detected"}
+#
+# The user asked: '{user_query}'
+#
+# Respond clearly, analytically, and in under 100 words. Suggest next steps if relevant.
+# """
+#
+#                     # ───────────────────────────
+#                     # 🎙️ Personality Selector
+#                     # ───────────────────────────
+#                     tone = st.selectbox("Choose Response Style", ["Professional", "Friendly", "Blunt Analyst"])
+#
+#                     personality_instruction = {
+#                         "Professional": "Respond formally and clearly, like a financial advisor.",
+#                         "Friendly": "Speak with encouragement and warmth, like a coach.",
+#                         "Blunt Analyst": "Be direct and focus strictly on numbers and logic."
+#                     }[tone]
+#
+#                     ai_response = generate_groq_summary({"prompt": ai_prompt})
+#                     st.markdown("#### 💬 SODA Says")
+#                     st.text(ai_response)
+#                 except Exception as e:
+#                     st.warning("⚠️ Copilot couldn't generate a response.\n" + str(e))
+
+        # ───────────────────────────
+        # 🤖 Copilot in Sidebar
+        # ───────────────────────────
+        with st.sidebar:
+            st.markdown("### 🤖 SODA Copilot")
+
+            # Tone selector
+            tone = st.selectbox("Choose Tone", ["Professional", "Friendly", "Blunt Analyst"])
+            personality_instruction = {
+                "Professional": "Respond formally and clearly, like a financial advisor.",
+                "Friendly": "Speak with encouragement and warmth, like a coach.",
+                "Blunt Analyst": "Be direct and focus strictly on numbers and logic."
+            }[tone]
+
+            # User input
+            user_query = st.text_input("Ask me anything about your finances:")
+
+            if user_query:
+                # You can place these earlier in the script too
+                metrics = extract_metrics_for_ai(filtered_df)
+                risks = detect_risks(filtered_df)
+
+                base_prompt = generate_agent_brief(metrics, risks) + "\nUser Query: " + user_query
+                prompt = personality_instruction + "\n\n" + base_prompt
+
+                try:
+                    ai_response = generate_groq_summary({"prompt": prompt})
+                    st.markdown("##### 💬 SODA Says")
+                    st.write(ai_response)
+                except Exception as e:
+                    st.warning(f"⚠️ Couldn’t generate a response:\n{e}")
 
         st.markdown("---")
         st.subheader("⚠️ Risk & Opportunity Detection")
@@ -295,7 +400,7 @@ if uploaded_file is not None:
 
         best = result_df.iloc[0]
         worst = result_df.iloc[-1]
-
+        # result_
         st.markdown(f"🥇 **Top Gainer:** {best['Stock']} (+{best['ROI (%)']}%)")
         st.markdown(f"🥀 **Top Loser:** {worst['Stock']} ({worst['ROI (%)']}%)")
 
