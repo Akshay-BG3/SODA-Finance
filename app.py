@@ -4,6 +4,9 @@ import base64
 import re
 import requests
 from datetime import datetime
+from streamlit import session_state
+
+
 
 from statement_analyzer.file_handler import load_csv, clean_dataframe
 from statement_analyzer.classifier import classify_transactions, calculate_monthly_totals
@@ -20,9 +23,12 @@ from agent.agent_core import generate_agent_brief, generate_agent_full_plan_prom
 from agent.agent_memory import save_metrics_to_memory, load_previous_metrics, compare_metrics
 from agent.pdf_report import generate_pdf
 
-st.set_page_config(page_title="SODA-Finance", layout="wide")
 
+# st.set_page_config(page_title="SODA-Finance", layout="wide")
+st.set_page_config(page_title="SODA Ultra", layout="wide")
 
+with open("style/ultra.css") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 def remove_emojis(text):
     emoji_pattern = re.compile("["
@@ -35,47 +41,59 @@ def remove_emojis(text):
 
 
 
-
-st.markdown(
-    f"""
-    <style>
-    .stApp {{
-        background-color: #f0f0f0;
-        color: #1e1e1e;
-    }}
-
-    html, body, [class*="css"] {{
-        color: #1e1e1e !important;
-        font-family: 'Montserrat', sans-serif;
-    }}
-
-    .stMarkdown, .stDataFrame, .stImage, .stSubheader, .stText, .stPlotlyChart, .stPyplotChart {{
-        background-color: #ffffff;
-        padding: 1rem;
-         border-radius: 1rem;
-        margin-bottom: 1rem;
-        color: #1e1e1e !important;
-        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.05);
-    }}
-
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
+# st.markdown(
+#     f"""
+#     <style>
+#     .stApp {{
+#         background-color: #f0f0f0;
+#         color: #1e1e1e;
+#     }}
+#
+#     html, body, [class*="css"] {{
+#         color: #1e1e1e !important;
+#         font-family: 'Montserrat', sans-serif;
+#     }}
+#
+#     .stMarkdown, .stDataFrame, .stImage, .stSubheader, .stText, .stPlotlyChart, .stPyplotChart {{
+#         background-color: #ffffff;
+#         padding: 1rem;
+#          border-radius: 1rem;
+#         margin-bottom: 1rem;
+#         color: #1e1e1e !important;
+#         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.05);
+#     }}
+#
+#     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+#     </style>
+#     """,
+#     unsafe_allow_html=True
+# )
 
 
+
+# col1, col2 = st.columns([1, 8])
+# with col1:
+#     st.image("logo.png", width=100)
+# with col2:
+#     st.markdown(
+#         "<h1 style='color:#004d4d;'>SODA-Finance</h1>"
+#         "<h4 style='margin-top:-10px;color:#2e2e3a;'>Self-Operating Data Intelligence Agent</h4>",
+#         unsafe_allow_html=True,
+#     )
+# st.markdown(f"**🕒 Report Generated On:** {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+#
+# st.markdown("---")
+
+
+# Branding Topbar
 col1, col2 = st.columns([1, 8])
 with col1:
-    st.image("logo.png", width=100)
+    st.image("logo.png", width=90)
 with col2:
-    st.markdown(
-        "<h1 style='color:#004d4d;'>SODA-Finance</h1>"
-        "<h4 style='margin-top:-10px;color:#2e2e3a;'>Self-Operating Data Intelligence Agent</h4>",
-        unsafe_allow_html=True,
-    )
-st.markdown(f"**🕒 Report Generated On:** {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    st.markdown("<h1 class='hero-title'>SODA-Finance</h1>", unsafe_allow_html=True)
+    st.markdown("<h4 class='hero-subtitle'>Your Self-Operating Data Intelligence Agent</h4>", unsafe_allow_html=True)
+
+st.markdown(f"**Report Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M')}")
 
 st.markdown("---")
 
@@ -129,40 +147,6 @@ if uploaded_file is not None:
         trend_data = get_monthly_category_trends(df)
         st.dataframe(trend_data, use_container_width=True)
 
-        #Graphs_vishualization
-    #     st.subheader("📊 Customize Your Dashboard View")
-    #     selected_charts = st.multiselect(
-    #         "Which visualizations would you like to see?",
-    #         ["Expense Distribution", "Monthly Summary", "Cumulative Balance", "Daily Heatmap", "Cash Flow Funnel"],
-    #         default=["Expense Distribution", "Monthly Summary"]
-    #     )
-    #     st.markdown("---")
-    #
-    # if  "Expense Distribution" in selected_charts:
-    #     st.subheader("📈 Expense Distribution (Pie Chart)")
-    #     pie_chart = plot_expense_pie_chart(df)
-    #     st.plotly_chart(pie_chart,  use_container_width=True)
-    #
-    # if "Monthly Summary" in selected_charts:
-    #     st.subheader("📊 Monthly Income vs Expense (Bar Chart)")
-    #     bar_chart = plot_monthly_bar_chart(df)
-    #     st.plotly_chart(bar_chart, use_container_width=True)
-    #
-    # if "Cumulative Balance" in selected_charts:
-    #     st.subheader("📉 Cumulative Balance Over Time")
-    #     cumulative_chart = plot_cumulative_balance(df)
-    #     st.plotly_chart(cumulative_chart, use_container_width=True)
-    #
-    # if "Daily Heatmap" in selected_charts:
-    #     st.subheader("🌡️ Daily Expense Heatmap")
-    #     heatmap = plot_daily_expense_heatmap(df)
-    #     st.plotly_chart(heatmap, use_container_width=True)
-    #
-    # if "Cash Flow Funnel" in selected_charts:
-    #     st.subheader("🔁 Cash Flow Funnel")
-    #     cashflow_tunnel = plot_cash_flow_funnel(df)
-    #     st.plotly_chart(cashflow_tunnel, use_container_width=True)
-
 
         # ───────────────────────────
         # 📌 Key Financial Highlights
@@ -173,13 +157,40 @@ if uploaded_file is not None:
         savings = total_income - total_expense
         savings_rate = (savings / total_income) * 100 if total_income > 0 else 0
 
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric(label="📥 Total Income", value=f"₹{total_income:,.0f}")
-        with col2:
-            st.metric(label="💸 Total Expense", value=f"₹{total_expense:,.0f}")
-        with col3:
-            st.metric(label="💰 Savings Rate", value=f"{savings_rate:.1f}%")
+        # col1, col2, col3 = st.columns(3)
+        # with col1:
+        #     st.metric(label="📥 Total Income", value=f"₹{total_income:,.0f}")
+        # with col2:
+        #     st.metric(label="💸 Total Expense", value=f"₹{total_expense:,.0f}")
+        # with col3:
+        #     st.metric(label="💰 Savings Rate", value=f"{savings_rate:.1f}%")
+
+        st.markdown("### Key Highlights", unsafe_allow_html=True)
+        kpi1, kpi2, kpi3 = st.columns(3)
+
+        with kpi1:
+            st.markdown("""
+                <div class='kpi-card'>
+                    <div class='kpi-label'>Total Income</div>
+                    <div class='kpi-value'>₹{:,.0f}</div>
+                </div>
+            """.format(total_income), unsafe_allow_html=True)
+
+        with kpi2:
+            st.markdown("""
+                <div class='kpi-card'>
+                    <div class='kpi-label'>Total Expense</div>
+                    <div class='kpi-value'>₹{:,.0f}</div>
+                </div>
+            """.format(total_expense), unsafe_allow_html=True)
+
+        with kpi3:
+            st.markdown("""
+                <div class='kpi-card'>
+                    <div class='kpi-label'>Savings Rate</div>
+                    <div class='kpi-value'>{:.1f}%</div>
+                </div>
+            """.format(savings_rate), unsafe_allow_html=True)
 
         # ───────────────────────────
         # 📊 Visualization Tabs
@@ -228,45 +239,6 @@ if uploaded_file is not None:
         except Exception as e:
             st.warning("⚠️ AI summary not available.\n" + str(e))
 
-#         # ───────────────────────────
-#         # 🤖 AI Finance Copilot Panel
-#         # ───────────────────────────
-#         metrics = extract_metrics_for_ai(filtered_df)
-#         risks = detect_risks(filtered_df)
-#         with st.expander("🤖 Open AI Finance Copilot", expanded=False):
-#             user_query = st.text_input("Ask SODA anything about your finances:")
-#             if user_query:
-#                 try:
-#                     ai_prompt = f"""
-# You are SODA Copilot—an intelligent finance assistant.
-#
-# User financial overview:
-# - Income this month: ₹{metrics['total_income']}
-# - Expenses this month: ₹{metrics['total_expense']}
-# - Top risk: {risks[0] if risks else "None detected"}
-#
-# The user asked: '{user_query}'
-#
-# Respond clearly, analytically, and in under 100 words. Suggest next steps if relevant.
-# """
-#
-#                     # ───────────────────────────
-#                     # 🎙️ Personality Selector
-#                     # ───────────────────────────
-#                     tone = st.selectbox("Choose Response Style", ["Professional", "Friendly", "Blunt Analyst"])
-#
-#                     personality_instruction = {
-#                         "Professional": "Respond formally and clearly, like a financial advisor.",
-#                         "Friendly": "Speak with encouragement and warmth, like a coach.",
-#                         "Blunt Analyst": "Be direct and focus strictly on numbers and logic."
-#                     }[tone]
-#
-#                     ai_response = generate_groq_summary({"prompt": ai_prompt})
-#                     st.markdown("#### 💬 SODA Says")
-#                     st.text(ai_response)
-#                 except Exception as e:
-#                     st.warning("⚠️ Copilot couldn't generate a response.\n" + str(e))
-
         # ───────────────────────────
         # 🤖 Copilot in Sidebar
         # ───────────────────────────
@@ -293,11 +265,13 @@ if uploaded_file is not None:
                 prompt = personality_instruction + "\n\n" + base_prompt
 
                 try:
-                    ai_response = generate_groq_summary({"prompt": prompt})
+                    # ai_response = generate_groq_summary({"prompt": prompt})
+                    ai_response = generate_groq_summary(metrics, user_query, personality_instruction)
                     st.markdown("##### 💬 SODA Says")
                     st.write(ai_response)
                 except Exception as e:
                     st.warning(f"⚠️ Couldn’t generate a response:\n{e}")
+
 
         st.markdown("---")
         st.subheader("⚠️ Risk & Opportunity Detection")
@@ -387,6 +361,8 @@ if uploaded_file is not None:
                 st.subheader("📉 Portfolio Performance")
                 result_df = analyze_portfolio(portfolio_df)
                 st.dataframe(result_df, use_container_width=True)
+        # graphs
+
 
         st.markdown("---")
         st.subheader("📊 Profit/Loss Chart")
