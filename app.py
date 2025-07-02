@@ -86,16 +86,15 @@ def remove_emojis(text):
 
 
 # Branding Topbar
-col1, col2 = st.columns([1, 8])
+col1, col2 = st.columns([1.5, 8])
 with col1:
-    st.image("logo.png", width=90)
+    st.image("logo.png", width=190)
 with col2:
     st.markdown("<h1 class='hero-title'>SODA-Finance</h1>", unsafe_allow_html=True)
     st.markdown("<h4 class='hero-subtitle'>Your Self-Operating Data Intelligence Agent</h4>", unsafe_allow_html=True)
 
 st.markdown(f"**Report Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-
-st.markdown("---")
+# st.markdown("---")
 
 
 uploaded_file = st.file_uploader("Upload your transaction CSV", type=["csv"])
@@ -225,19 +224,20 @@ if uploaded_file is not None:
             st.plotly_chart(plot_cash_flow_funnel(filtered_df), use_container_width=True)
 
 
-        st.markdown("---")
-        st.subheader("🧐 Summary Insights")
-        summary = generate_summary(df)
-        st.text(summary)
+        # st.markdown("---")
+        # st.subheader("🧐 Summary Insights")
+        # summary = generate_summary(df)
+        # st.text(summary)
+        #
+        # st.markdown("---")
+        # st.subheader("🤖 AI-Generated Financial Report")
+        # try:
+        #     metrics = extract_metrics_for_ai(df)
+        #     ai_summary = generate_groq_summary(metrics, user_query, personality_instruction)
+        #     st.text(ai_summary)
+        # except Exception as e:
+        #     st.warning("⚠️ AI summary not available.\n" + str(e))
 
-        st.markdown("---")
-        st.subheader("🤖 AI-Generated Financial Report")
-        try:
-            metrics = extract_metrics_for_ai(df)
-            ai_summary = generate_groq_summary(metrics)
-            st.text(ai_summary)
-        except Exception as e:
-            st.warning("⚠️ AI summary not available.\n" + str(e))
 
         # ───────────────────────────
         # 🤖 Copilot in Sidebar
@@ -271,6 +271,17 @@ if uploaded_file is not None:
                     st.write(ai_response)
                 except Exception as e:
                     st.warning(f"⚠️ Couldn’t generate a response:\n{e}")
+
+        if user_query:
+            st.markdown("### 🤖 AI-Generated Financial Report")
+            try:
+                metrics = extract_metrics_for_ai(df)
+                ai_summary = generate_groq_summary(metrics, user_query, personality_instruction)
+                st.text(ai_summary)
+            except Exception as e:
+                st.warning("⚠️ AI summary not available.\n" + str(e))
+        else:
+            st.info("💬 Enter a query in the Copilot panel to get an AI response.")
 
 
         st.markdown("---")
