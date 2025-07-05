@@ -349,18 +349,32 @@ if uploaded_file is not None:
             st.success("✅ No abnormal monthly spending spikes.")
 
         #
+        # st.markdown("---")
+        # st.subheader("🧐 SODA Agent Suggestion")
+        #
+        # try:
+        #     metrics = extract_metrics_for_ai(df)
+        #     risks = detect_risks(df)
+        #     agent_prompt = "What key risks or financial opportunities do you see in this data?"
+        #     # Pass tone and dummy user_query for compatibility
+        #     agent_response = generate_groq_summary(metrics, agent_prompt, personality_instruction)
+        #     st.text(agent_response)
+        # except Exception as e:
+        #     st.warning("⚠️ Agent failed: " + str(e))
         st.markdown("---")
         st.subheader("🧐 SODA Agent Suggestion")
 
-        try:
-            metrics = extract_metrics_for_ai(df)
-            risks = detect_risks(df)
-            agent_prompt = "What key risks or financial opportunities do you see in this data?"
-            # Pass tone and dummy user_query for compatibility
-            agent_response = generate_groq_summary(metrics, agent_prompt, personality_instruction)
-            st.text(agent_response)
-        except Exception as e:
-            st.warning("⚠️ Agent failed: " + str(e))
+        if "agent_suggestion" not in st.session_state:
+            try:
+                metrics = extract_metrics_for_ai(df)
+                risks = detect_risks(df)
+                agent_prompt = "What key risks or financial opportunities do you see in this data?"
+                st.session_state.agent_suggestion = generate_groq_summary(metrics, agent_prompt,
+                                                                          personality_instruction)
+            except Exception as e:
+                st.session_state.agent_suggestion = f"⚠️ Agent failed: {e}"
+
+        st.text(st.session_state.agent_suggestion)
 
         st.markdown("---")
         st.subheader("📋 SODA Suggested Next Steps")
