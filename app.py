@@ -247,6 +247,35 @@ if uploaded_file is not None:
         # ───────────────────────────
         # 🤖 Copilot in Sidebar
         # ───────────────────────────
+        # with st.sidebar:
+        #     st.markdown("### 🤖 SODA Copilot")
+        #
+        #     # Tone selector
+        #     tone = st.selectbox("Choose Tone", ["Professional", "Friendly", "Blunt Analyst"])
+        #     personality_instruction = {
+        #         "Professional": "Respond formally and clearly, like a financial advisor.",
+        #         "Friendly": "Speak with encouragement and warmth, like a coach.",
+        #         "Blunt Analyst": "Be direct and focus strictly on numbers and logic."
+        #     }[tone]
+        #
+        #     # User input
+        #     user_query = st.text_input("Ask me anything about your finances:")
+        #
+        #     if user_query:
+        #         # You can place these earlier in the script too
+        #         metrics = extract_metrics_for_ai(filtered_df)
+        #         risks = detect_risks(filtered_df)
+        #
+        #         base_prompt = generate_agent_brief(metrics, risks) + "\nUser Query: " + user_query
+        #         prompt = personality_instruction + "\n\n" + base_prompt
+        #
+        #         try:
+        #             # ai_response = generate_groq_summary({"prompt": prompt})
+        #             ai_response = generate_groq_summary(metrics, user_query, personality_instruction)
+        #             st.markdown("##### 💬 SODA Says")
+        #             st.write(ai_response)
+        #         except Exception as e:
+        #             st.warning(f"⚠️ Couldn’t generate a response:\n{e}")
         with st.sidebar:
             st.markdown("### 🤖 SODA Copilot")
 
@@ -258,24 +287,27 @@ if uploaded_file is not None:
                 "Blunt Analyst": "Be direct and focus strictly on numbers and logic."
             }[tone]
 
-            # User input
+            # Session state setup
+            if "copilot_response" not in st.session_state:
+                st.session_state.copilot_response = None
+                st.session_state.last_query = ""
+
             user_query = st.text_input("Ask me anything about your finances:")
 
-            if user_query:
-                # You can place these earlier in the script too
-                metrics = extract_metrics_for_ai(filtered_df)
-                risks = detect_risks(filtered_df)
+            if st.button("Ask SODA"):
+                if user_query.strip() and user_query != st.session_state.last_query:
+                    metrics = extract_metrics_for_ai(filtered_df)
+                    risks = detect_risks(filtered_df)
+                    try:
+                        st.session_state.copilot_response = generate_groq_summary(metrics, user_query,
+                                                                                  personality_instruction)
+                        st.session_state.last_query = user_query
+                    except Exception as e:
+                        st.session_state.copilot_response = f"⚠️ Couldn’t generate response:\n{e}"
 
-                base_prompt = generate_agent_brief(metrics, risks) + "\nUser Query: " + user_query
-                prompt = personality_instruction + "\n\n" + base_prompt
-
-                try:
-                    # ai_response = generate_groq_summary({"prompt": prompt})
-                    ai_response = generate_groq_summary(metrics, user_query, personality_instruction)
-                    st.markdown("##### 💬 SODA Says")
-                    st.write(ai_response)
-                except Exception as e:
-                    st.warning(f"⚠️ Couldn’t generate a response:\n{e}")
+            if st.session_state.copilot_response:
+                st.markdown("##### 💬 SODA Says")
+                st.write(st.session_state.copilot_response)
 
         # if user_query:
         #     st.markdown("### 🤖 AI-Generated Financial Report")
