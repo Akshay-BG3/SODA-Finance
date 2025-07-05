@@ -3,6 +3,7 @@ import pandas as pd
 import base64
 import re
 import requests
+import os
 from datetime import datetime
 from streamlit import session_state
 
@@ -41,50 +42,6 @@ def remove_emojis(text):
 
 
 
-# st.markdown(
-#     f"""
-#     <style>
-#     .stApp {{
-#         background-color: #f0f0f0;
-#         color: #1e1e1e;
-#     }}
-#
-#     html, body, [class*="css"] {{
-#         color: #1e1e1e !important;
-#         font-family: 'Montserrat', sans-serif;
-#     }}
-#
-#     .stMarkdown, .stDataFrame, .stImage, .stSubheader, .stText, .stPlotlyChart, .stPyplotChart {{
-#         background-color: #ffffff;
-#         padding: 1rem;
-#          border-radius: 1rem;
-#         margin-bottom: 1rem;
-#         color: #1e1e1e !important;
-#         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.05);
-#     }}
-#
-#     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
-#     </style>
-#     """,
-#     unsafe_allow_html=True
-# )
-
-
-
-# col1, col2 = st.columns([1, 8])
-# with col1:
-#     st.image("logo.png", width=100)
-# with col2:
-#     st.markdown(
-#         "<h1 style='color:#004d4d;'>SODA-Finance</h1>"
-#         "<h4 style='margin-top:-10px;color:#2e2e3a;'>Self-Operating Data Intelligence Agent</h4>",
-#         unsafe_allow_html=True,
-#     )
-# st.markdown(f"**🕒 Report Generated On:** {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-#
-# st.markdown("---")
-
-
 # Branding Topbar
 col1, col2 = st.columns([1.5, 8])
 with col1:
@@ -95,6 +52,54 @@ with col2:
 
 st.markdown(f"**Report Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M')}")
 # st.markdown("---")
+
+
+# Paths to your renamed demo data files
+DEMO_BANK_PATH = "demo_data/demo_bank_statement.csv"
+DEMO_PORTFOLIO_PATH = "demo_data/demo_stocks_portfolio.csv"
+
+# Ensure the demo_data folder exists
+os.makedirs("demo_data", exist_ok=True)
+
+# Load demo files (these are the ones you uploaded)
+# bank_demo_df = pd.read_csv("/mnt/data/sample.csv")
+# portfolio_demo_df = pd.read_csv("/mnt/data/sample_portfolio.csv")
+bank_demo_df = pd.read_csv("demo_data/demo_bank_statement.csv")
+portfolio_demo_df = pd.read_csv("demo_data/demo_stocks_portfolio.csv")
+
+
+# Save them with the correct custom names
+bank_demo_df.to_csv(DEMO_BANK_PATH, index=False)
+portfolio_demo_df.to_csv(DEMO_PORTFOLIO_PATH, index=False)
+
+
+# Sidebar toggle
+use_demo = st.sidebar.checkbox("🔁 Use Demo Dataset", value=False)
+
+if use_demo:
+    st.success("✅ Demo Mode Enabled – Download the example CSVs below.")
+
+    # Download buttons with custom filenames
+    st.subheader("⬇️ Download Demo CSV Files")
+
+    bank_csv = bank_demo_df.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        label="Download Demo Bank Statement",
+        data=bank_csv,
+        file_name="demo_bank_statement.csv",
+        mime="text/csv"
+    )
+
+    portfolio_csv = portfolio_demo_df.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        label="Download Demo Portfolio (Stocks)",
+        data=portfolio_csv,
+        file_name="demo_stocks_portfolio.csv",
+        mime="text/csv"
+    )
+
+    st.info("You can now upload these files manually to test the system.")
+
 
 
 uploaded_file = st.file_uploader("Upload your transaction CSV", type=["csv"])
@@ -272,16 +277,16 @@ if uploaded_file is not None:
                 except Exception as e:
                     st.warning(f"⚠️ Couldn’t generate a response:\n{e}")
 
-        if user_query:
-            st.markdown("### 🤖 AI-Generated Financial Report")
-            try:
-                metrics = extract_metrics_for_ai(df)
-                ai_summary = generate_groq_summary(metrics, user_query, personality_instruction)
-                st.text(ai_summary)
-            except Exception as e:
-                st.warning("⚠️ AI summary not available.\n" + str(e))
-        else:
-            st.info("💬 Enter a query in the Copilot panel to get an AI response.")
+        # if user_query:
+        #     st.markdown("### 🤖 AI-Generated Financial Report")
+        #     try:
+        #         metrics = extract_metrics_for_ai(df)
+        #         ai_summary = generate_groq_summary(metrics, user_query, personality_instruction)
+        #         st.text(ai_summary)
+        #     except Exception as e:
+        #         st.warning("⚠️ AI summary not available.\n" + str(e))
+        # else:
+        #     st.info("💬 Enter a query in the Copilot panel to get an AI response.")
 
 
         st.markdown("---")
@@ -311,22 +316,26 @@ if uploaded_file is not None:
         else:
             st.success("✅ No abnormal monthly spending spikes.")
 
+        #
         st.markdown("---")
         st.subheader("🧐 SODA Agent Suggestion")
+
         try:
             metrics = extract_metrics_for_ai(df)
             risks = detect_risks(df)
-            agent_prompt = generate_agent_brief(metrics, risks)
-            agent_response = generate_groq_summary({"prompt": agent_prompt})
+            agent_prompt = "What key risks or financial opportunities do you see in this data?"
+            # Pass tone and dummy user_query for compatibility
+            agent_response = generate_groq_summary(metrics, agent_prompt, personality_instruction)
             st.text(agent_response)
         except Exception as e:
             st.warning("⚠️ Agent failed: " + str(e))
 
         st.markdown("---")
         st.subheader("📋 SODA Suggested Next Steps")
+
         try:
-            plan_prompt = generate_agent_full_plan_prompt(metrics, risks)
-            ai_plan = generate_groq_summary({"prompt": plan_prompt})
+            plan_prompt = "Based on this data, suggest 3 next financial steps."
+            ai_plan = generate_groq_summary(metrics, plan_prompt, personality_instruction)
             st.text(ai_plan)
         except Exception as e:
             st.warning("⚠️ AI plan generation failed. Showing fallback plan.")
@@ -342,6 +351,8 @@ if uploaded_file is not None:
 
         save_metrics_to_memory(metrics)
 
+        summary = generate_summary(df)
+
         st.markdown("---")
         st.subheader("📤 Export Report as PDF")
         try:
@@ -354,6 +365,8 @@ if uploaded_file is not None:
             st.markdown(href, unsafe_allow_html=True)
         except Exception as e:
             st.warning("⚠️ Could not generate PDF: " + str(e))
+
+
 
         st.markdown("---")
         st.subheader("📥 Upload Portfolio CSV")
