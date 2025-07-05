@@ -292,7 +292,7 @@ if uploaded_file is not None:
                 st.session_state.copilot_response = None
                 st.session_state.last_query = ""
 
-            user_query = st.text_input("Ask me anything about your finances:")
+            user_query = st.text_input("Ask me anything about your finances:", key="copilot_query")
 
             if st.button("Ask SODA"):
                 if user_query.strip() and user_query != st.session_state.last_query:
@@ -361,20 +361,23 @@ if uploaded_file is not None:
         #     st.text(agent_response)
         # except Exception as e:
         #     st.warning("⚠️ Agent failed: " + str(e))
-        st.markdown("---")
-        st.subheader("🧐 SODA Agent Suggestion")
 
-        if "agent_suggestion" not in st.session_state:
-            try:
-                metrics = extract_metrics_for_ai(df)
-                risks = detect_risks(df)
-                agent_prompt = "What key risks or financial opportunities do you see in this data?"
-                st.session_state.agent_suggestion = generate_groq_summary(metrics, agent_prompt,
+        if uploaded_file is not None:
+            if isinstance(df, pd.DataFrame):
+                st.markdown("---")
+                st.subheader("🧐 SODA Agent Suggestion")
+
+                if "agent_suggestion" not in st.session_state:
+                    try:
+                        metrics = extract_metrics_for_ai(df)
+                        risks = detect_risks(df)
+                        agent_prompt = "What key risks or financial opportunities do you see in this data?"
+                        st.session_state.agent_suggestion = generate_groq_summary(metrics, agent_prompt,
                                                                           personality_instruction)
-            except Exception as e:
-                st.session_state.agent_suggestion = f"⚠️ Agent failed: {e}"
+                    except Exception as e:
+                        st.session_state.agent_suggestion = f"⚠️ Agent failed: {e}"
 
-        st.text(st.session_state.agent_suggestion)
+                st.text(st.session_state.agent_suggestion)
 
         st.markdown("---")
         st.subheader("📋 SODA Suggested Next Steps")
