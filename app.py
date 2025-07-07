@@ -394,27 +394,54 @@ if uploaded_file is not None:
         # except Exception as e:
         #     st.warning(f"⚠️ Could not generate PDF: {e}")
 
-        ai_summary = st.session_state.get("ai_summary", "").strip()
-        summary = summary.strip() if 'summary' in locals() else "No summary available."
-        memory_insight = memory_insight.strip() if 'memory_insight' in locals() else "No memory insight available."
-
-        # Fallback defaults
-        if not ai_summary:
-            ai_summary = "AI summary not available."
-        if not summary:
-            summary = "Summary not available."
-        if not memory_insight:
-            memory_insight = "No insights found in memory."
+        # ai_summary = st.session_state.get("ai_summary", "").strip()
+        # summary = summary.strip() if 'summary' in locals() else "No summary available."
+        # memory_insight = memory_insight.strip() if 'memory_insight' in locals() else "No memory insight available."
+        #
+        # # Fallback defaults
+        # if not ai_summary:
+        #     ai_summary = "AI summary not available."
+        # if not summary:
+        #     summary = "Summary not available."
+        # if not memory_insight:
+        #     memory_insight = "No insights found in memory."
+        #
+        # try:
+        #     cleaned_summary = remove_emojis(summary)
+        #     cleaned_ai_summary = remove_emojis(ai_summary)
+        #     cleaned_memory_insight = remove_emojis(memory_insight)
+        #
+        #     pdf_data = generate_pdf(cleaned_summary, cleaned_ai_summary, cleaned_memory_insight)
+        #     b64 = base64.b64encode(pdf_data).decode()
+        #     href = f'<a href="data:application/octet-stream;base64,{b64}" download="SODA_Report.pdf">📅 Download PDF Report</a>'
+        #     st.markdown(href, unsafe_allow_html=True)
+        # except Exception as e:
+        #     st.warning(f"⚠️ Could not generate PDF: {e}")
 
         try:
+            ai_summary = st.session_state.get("ai_summary", "").strip()
+            summary = summary.strip() if 'summary' in locals() else "No summary available."
+            memory_insight = memory_insight.strip() if 'memory_insight' in locals() else "No memory insight available."
+
+            # Fallbacks if any are blank
+            if not ai_summary:
+                ai_summary = "AI summary not available."
+            if not summary:
+                summary = "Summary not available."
+            if not memory_insight:
+                memory_insight = "No insights found in memory."
+
+            # Clean for PDF safety
             cleaned_summary = remove_emojis(summary)
             cleaned_ai_summary = remove_emojis(ai_summary)
             cleaned_memory_insight = remove_emojis(memory_insight)
 
+            # Generate PDF safely
             pdf_data = generate_pdf(cleaned_summary, cleaned_ai_summary, cleaned_memory_insight)
             b64 = base64.b64encode(pdf_data).decode()
             href = f'<a href="data:application/octet-stream;base64,{b64}" download="SODA_Report.pdf">📅 Download PDF Report</a>'
             st.markdown(href, unsafe_allow_html=True)
+
         except Exception as e:
             st.warning(f"⚠️ Could not generate PDF: {e}")
 
