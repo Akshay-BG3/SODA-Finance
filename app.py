@@ -332,20 +332,6 @@ if uploaded_file is not None:
                         st.session_state.copilot_response = f"⚠️ Couldn’t generate response:\n{e}"
                         st.session_state.ai_summary = ""
 
-            # if st.button("Ask SODA"):
-            #     if user_query.strip() and user_query != st.session_state.last_query:
-            #         metrics = extract_metrics_for_ai(filtered_df)
-            #         risks = detect_risks(filtered_df)
-            #         try:
-            #             # st.session_state.copilot_response = generate_groq_summary(metrics, user_query,
-            #             #                                                           personality_instruction)
-            #             response = generate_groq_summary(metrics, user_query, personality_instruction)
-            #             st.session_state.copilot_response = response
-            #             st.session_state.last_query = user_query
-            #             st.session_state.ai_summary = response
-            #         except Exception as e:
-            #             st.session_state.copilot_response = f"⚠️ Couldn’t generate response:\n{e}"
-            #             st.session_state.ai_summary = ""
 
             if st.session_state.copilot_response:
                 st.markdown("##### 💬 SODA Says")
@@ -395,8 +381,32 @@ if uploaded_file is not None:
         st.markdown("---")
         st.subheader("📤 Export Report as PDF")
 
+        # try:
+        #     ai_summary = st.session_state.get("ai_summary", "")
+        #     cleaned_summary = remove_emojis(summary)
+        #     cleaned_ai_summary = remove_emojis(ai_summary)
+        #     cleaned_memory_insight = remove_emojis(memory_insight)
+        #
+        #     pdf_data = generate_pdf(cleaned_summary, cleaned_ai_summary, cleaned_memory_insight)
+        #     b64 = base64.b64encode(pdf_data).decode()
+        #     href = f'<a href="data:application/octet-stream;base64,{b64}" download="SODA_Report.pdf">📅 Download PDF Report</a>'
+        #     st.markdown(href, unsafe_allow_html=True)
+        # except Exception as e:
+        #     st.warning(f"⚠️ Could not generate PDF: {e}")
+
+        ai_summary = st.session_state.get("ai_summary", "").strip()
+        summary = summary.strip() if 'summary' in locals() else "No summary available."
+        memory_insight = memory_insight.strip() if 'memory_insight' in locals() else "No memory insight available."
+
+        # Fallback defaults
+        if not ai_summary:
+            ai_summary = "AI summary not available."
+        if not summary:
+            summary = "Summary not available."
+        if not memory_insight:
+            memory_insight = "No insights found in memory."
+
         try:
-            ai_summary = st.session_state.get("ai_summary", "")
             cleaned_summary = remove_emojis(summary)
             cleaned_ai_summary = remove_emojis(ai_summary)
             cleaned_memory_insight = remove_emojis(memory_insight)
