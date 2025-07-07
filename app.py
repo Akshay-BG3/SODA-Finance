@@ -43,15 +43,16 @@ def remove_emojis(text):
 
 
 # Branding Topbar
-col1, col2 = st.columns([1.5, 8])
+col1, col2, col3 = st.columns([1.5, 8, 2.5])
 with col1:
     st.image("logo.png", width=190)
 with col2:
     st.markdown("<h1 class='hero-title'>SODA-Finance</h1>", unsafe_allow_html=True)
     st.markdown("<h4 class='hero-subtitle'>Your Self-Operating Data Intelligence Agent</h4>", unsafe_allow_html=True)
-
-st.markdown(f"**Report Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-# st.markdown("---")
+with col3:
+    st.markdown("<div style='text-align:right;'>", unsafe_allow_html=True)
+    use_demo = st.checkbox("🔁 Use Demo Dataset", value=False, key="top_demo_toggle")
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 # Paths to your renamed demo data files
@@ -62,8 +63,6 @@ DEMO_PORTFOLIO_PATH = "demo_data/demo_stocks_portfolio.csv"
 os.makedirs("demo_data", exist_ok=True)
 
 # Load demo files (these are the ones you uploaded)
-# bank_demo_df = pd.read_csv("/mnt/data/sample.csv")
-# portfolio_demo_df = pd.read_csv("/mnt/data/sample_portfolio.csv")
 bank_demo_df = pd.read_csv("demo_data/demo_bank_statement.csv")
 portfolio_demo_df = pd.read_csv("demo_data/demo_stocks_portfolio.csv")
 
@@ -74,7 +73,7 @@ portfolio_demo_df.to_csv(DEMO_PORTFOLIO_PATH, index=False)
 
 
 # Sidebar toggle
-use_demo = st.sidebar.checkbox("🔁 Use Demo Dataset", value=False)
+# use_demo = st.sidebar.checkbox("🔁 Use Demo Dataset", value=False)
 
 if use_demo:
     st.success("✅ Demo Mode Enabled – Download the example CSVs below.")
@@ -287,42 +286,70 @@ if uploaded_file is not None:
                 "Blunt Analyst": "Be direct and focus strictly on numbers and logic."
             }[tone]
 
+            # # Preset prompt buttons
+            # st.markdown("Quick Questions:")
+            # preset_query = st.radio(
+            #     "",
+            #     [
+            #         "What are my top financial risks right now?",
+            #         "What next steps should I consider?",
+            #         "Summarize my monthly financial health"
+            #     ],
+            #     index=None
+            # )
+
             # Session state setup
             if "copilot_response" not in st.session_state:
                 st.session_state.copilot_response = None
                 st.session_state.last_query = ""
 
-            user_query = st.text_input("Ask me anything about your finances:", key="copilot_query")
+            user_query = st.text_input("💬 Or Ask me anything about your finances:", key="copilot_query")
+
+            # Preset prompt buttons
+            st.markdown("Quick Questions:")
+            preset_query = st.radio(
+                "",
+                [
+                    "What are my top financial risks right now?",
+                    "What next steps should I consider?",
+                    "Summarize my monthly financial health"
+                ],
+                index=None
+            )
+
+            final_query = preset_query if preset_query else user_query
 
             if st.button("Ask SODA"):
-                if user_query.strip() and user_query != st.session_state.last_query:
+                if final_query.strip() and final_query != st.session_state.last_query:
                     metrics = extract_metrics_for_ai(filtered_df)
                     risks = detect_risks(filtered_df)
                     try:
-                        # st.session_state.copilot_response = generate_groq_summary(metrics, user_query,
-                        #                                                           personality_instruction)
-                        response = generate_groq_summary(metrics, user_query, personality_instruction)
+                        response = generate_groq_summary(metrics, final_query, personality_instruction)
                         st.session_state.copilot_response = response
-                        st.session_state.last_query = user_query
+                        st.session_state.last_query = final_query
                         st.session_state.ai_summary = response
                     except Exception as e:
                         st.session_state.copilot_response = f"⚠️ Couldn’t generate response:\n{e}"
                         st.session_state.ai_summary = ""
 
+            # if st.button("Ask SODA"):
+            #     if user_query.strip() and user_query != st.session_state.last_query:
+            #         metrics = extract_metrics_for_ai(filtered_df)
+            #         risks = detect_risks(filtered_df)
+            #         try:
+            #             # st.session_state.copilot_response = generate_groq_summary(metrics, user_query,
+            #             #                                                           personality_instruction)
+            #             response = generate_groq_summary(metrics, user_query, personality_instruction)
+            #             st.session_state.copilot_response = response
+            #             st.session_state.last_query = user_query
+            #             st.session_state.ai_summary = response
+            #         except Exception as e:
+            #             st.session_state.copilot_response = f"⚠️ Couldn’t generate response:\n{e}"
+            #             st.session_state.ai_summary = ""
+
             if st.session_state.copilot_response:
                 st.markdown("##### 💬 SODA Says")
                 st.write(st.session_state.copilot_response)
-
-        # if user_query:
-        #     st.markdown("### 🤖 AI-Generated Financial Report")
-        #     try:
-        #         metrics = extract_metrics_for_ai(df)
-        #         ai_summary = generate_groq_summary(metrics, user_query, personality_instruction)
-        #         st.text(ai_summary)
-        #     except Exception as e:
-        #         st.warning("⚠️ AI summary not available.\n" + str(e))
-        # else:
-        #     st.info("💬 Enter a query in the Copilot panel to get an AI response.")
 
 
         st.markdown("---")
@@ -352,59 +379,34 @@ if uploaded_file is not None:
         else:
             st.success("✅ No abnormal monthly spending spikes.")
 
-
-        st.markdown("---")
-        st.subheader("🧐 SODA Agent Suggestion")
+        try:
+            summary = generate_summary(df)
+        except Exception as e:
+            summary = f"⚠️ Summary generation failed: {str(e)}"
 
         try:
             metrics = extract_metrics_for_ai(df)
-            risks = detect_risks(df)
-            agent_prompt = "What key risks or financial opportunities do you see in this data?"
-            # Pass tone and dummy user_query for compatibility
-            agent_response = generate_groq_summary(metrics, agent_prompt, personality_instruction)
-            st.text(agent_response)
+            prev_metrics = load_previous_metrics()
+            memory_insight = compare_metrics(metrics, prev_metrics)
         except Exception as e:
-            st.warning("⚠️ Agent failed: " + str(e))
-
-
-        st.markdown("---")
-        st.subheader("📋 SODA Suggested Next Steps")
-
-        try:
-            plan_prompt = "Based on this data, suggest 3 next financial steps."
-            ai_plan = generate_groq_summary(metrics, plan_prompt, personality_instruction)
-            st.text(ai_plan)
-        except Exception as e:
-            st.warning("⚠️ AI plan generation failed. Showing fallback plan.")
-            fallback = fallback_agent_plan(metrics, risks)
-            st.markdown(fallback)
-
-        prev_metrics = load_previous_metrics()
-        memory_insight = compare_metrics(metrics, prev_metrics)
-
-        st.markdown("---")
-        st.subheader("🧠 Memory Insight")
-        st.markdown(memory_insight)
-
-        save_metrics_to_memory(metrics)
-
-        summary = generate_summary(df)
+            metrics = {}
+            memory_insight = f"⚠️ Could not generate memory insight: {e}"
 
         st.markdown("---")
         st.subheader("📤 Export Report as PDF")
+
         try:
-            cleaned_summary = remove_emojis(summary)
             ai_summary = st.session_state.get("ai_summary", "")
+            cleaned_summary = remove_emojis(summary)
             cleaned_ai_summary = remove_emojis(ai_summary)
-            cleaned_alerts = remove_emojis("\n".join(alerts))
-            pdf_data = generate_pdf(summary, ai_summary, memory_insight)
+            cleaned_memory_insight = remove_emojis(memory_insight)
+
+            pdf_data = generate_pdf(cleaned_summary, cleaned_ai_summary, cleaned_memory_insight)
             b64 = base64.b64encode(pdf_data).decode()
             href = f'<a href="data:application/octet-stream;base64,{b64}" download="SODA_Report.pdf">📅 Download PDF Report</a>'
             st.markdown(href, unsafe_allow_html=True)
         except Exception as e:
-            st.warning("⚠️ Could not generate PDF: " + str(e))
-
-
+            st.warning(f"⚠️ Could not generate PDF: {e}")
 
         st.markdown("---")
         st.subheader("📥 Upload Portfolio CSV")
@@ -423,26 +425,43 @@ if uploaded_file is not None:
                 st.subheader("📉 Portfolio Performance")
                 result_df = analyze_portfolio(portfolio_df)
                 st.dataframe(result_df, use_container_width=True)
+
+
         # graphs
+if 'result_df' in locals():
+    st.markdown("---")
+    st.subheader("📊 Profit/Loss Chart")
+    bar_chart = plot_profit_loss_bar(result_df)
+    st.pyplot(bar_chart)
 
+    st.markdown("---")
+    st.subheader("🦁 Investment Allocation")
+    pie_chart = plot_portfolio_allocation(result_df)
+    st.pyplot(pie_chart)
 
-        st.markdown("---")
-        st.subheader("📊 Profit/Loss Chart")
-        bar_chart = plot_profit_loss_bar(result_df)
-        st.pyplot(bar_chart)
-
-        st.markdown("---")
-        st.subheader("🦁 Investment Allocation")
-        pie_chart = plot_portfolio_allocation(result_df)
-        st.pyplot(pie_chart)
-
-        best = result_df.iloc[0]
-        worst = result_df.iloc[-1]
-        # result_
-        st.markdown(f"🥇 **Top Gainer:** {best['Stock']} (+{best['ROI (%)']}%)")
-        st.markdown(f"🥀 **Top Loser:** {worst['Stock']} ({worst['ROI (%)']}%)")
-
-    else:
-        st.error(df)
+    best = result_df.iloc[0]
+    worst = result_df.iloc[-1]
+    st.markdown(f"🥇 **Top Gainer:** {best['Stock']} (+{best['ROI (%)']}%)")
+    st.markdown(f"🥀 **Top Loser:** {worst['Stock']} ({worst['ROI (%)']}%)")
 else:
-    st.info("⬆️ Please upload a CSV file to get started.")
+    st.info("💼 Upload your portfolio CSV to view investment insights.")
+#         st.markdown("---")
+#         st.subheader("📊 Profit/Loss Chart")
+#         bar_chart = plot_profit_loss_bar(result_df)
+#         st.pyplot(bar_chart)
+#
+#         st.markdown("---")
+#         st.subheader("🦁 Investment Allocation")
+#         pie_chart = plot_portfolio_allocation(result_df)
+#         st.pyplot(pie_chart)
+#
+#         best = result_df.iloc[0]
+#         worst = result_df.iloc[-1]
+#         # result_
+#         st.markdown(f"🥇 **Top Gainer:** {best['Stock']} (+{best['ROI (%)']}%)")
+#         st.markdown(f"🥀 **Top Loser:** {worst['Stock']} ({worst['ROI (%)']}%)")
+#
+#     else:
+#         st.error(df)
+# else:
+#     st.info("⬆️ Please upload a CSV file to get started.")
